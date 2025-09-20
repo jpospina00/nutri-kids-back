@@ -16,7 +16,13 @@
   "author": "",
   "license": "ISC",
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": "eslint --fix"
+    "src/**/*.{js,jsx}": [
+      "eslint --fix",
+      "npm test -- --bail --findRelatedTests"
+    ],
+    "tests/**/*.js": [
+      "eslint --fix"
+    ]
   },
   "dependencies": {
     "cors": "^2.8.5",

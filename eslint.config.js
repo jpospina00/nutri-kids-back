@@ -11,6 +11,7 @@ export default [
       sourceType: 'module',
       globals: {
         ...globals.node, // Variables globales de Node.js
+        ...globals.jest, // Variables globales de Jest (para tests)
       },
     },
     rules: {
