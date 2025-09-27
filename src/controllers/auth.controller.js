@@ -93,3 +93,21 @@ export const resetPassword = async (req, res) => {
   // Logic to handle password reset
   res.json({ message: 'Password has been reset successfully', ok: true });
 };
+
+export const login = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await Auth.findOne({ where: { email } });
+    if (!user || user.password !== password) {
+      return res
+        .status(401)
+        .json({ message: 'Credenciales inválidas', ok: false });
+    }
+    return res.json({ message: 'Login successful', ok: true });
+  } catch (error) {
+    console.error('Error en login:', error);
+    return res
+      .status(500)
+      .json({ error: 'Error al procesar la solicitud', ok: false });
+  }
+};
