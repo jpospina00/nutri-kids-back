@@ -12,6 +12,10 @@ const Auth = sequelize.define('Auth', {
     type: DataTypes.TEXT,
     allowNull: false,
   },
+  salt: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   resetPasswordToken: {
     type: DataTypes.STRING,
     allowNull: true,

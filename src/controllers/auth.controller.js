@@ -1,25 +1,25 @@
-import { ok } from 'assert';
+import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import Auth from '../models/Auth.js';
 import transporter from '../utils/emails.js';
-import crypto from 'crypto';
 
 export const forgotPassword = async (req, res) => {
-  console.log('Received forgotPassword request with body:', req.body);
+  // console.log('Received forgotPassword request with body:', req.body);
   const { email } = req.body;
   // Logic to handle forgot password
   try {
     const user = await Auth.findOne({ where: { email } });
-    // if (!user) {
-    //   return res.status(404).json({ message: 'Usuario no encontrado' });
-    // }
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
 
     // Generar PIN de 6 dígitos
     const pin = Math.floor(100000 + Math.random() * 900000).toString();
     const expires = new Date(Date.now() + 3600000); // 1 hora
 
-    // user.resetPasswordToken = token;
-    // user.resetPasswordExpires = expires;
-    // await user.save();
+    user.resetPasswordToken = pin;
+    user.resetPasswordExpires = expires;
+    await user.save();
 
     // Enviar correo
     await transporter.sendMail({
@@ -66,7 +66,7 @@ export const forgotPassword = async (req, res) => {
     });
     res.json({ message: 'Correo de restablecimiento enviado', ok: true });
   } catch (error) {
-    console.error('Error en forgotPassword:', error);
+    // console.error('Error en forgotPassword:', error);
     res
       .status(500)
       .json({ error: 'Error al procesar la solicitud', ok: false });
@@ -75,37 +75,85 @@ export const forgotPassword = async (req, res) => {
 
 export const verifyPin = async (req, res) => {
   const { email, pin } = req.body;
+  // console.log('Verifying PIN for email:', email, 'with PIN:', pin);
   // Logic to verify the PIN
-  // const user = await Auth.findOne({ where: { email } });
-  // if (!user || user.resetPasswordToken !== pin) {
-  //   return res.status(400).json({ message: 'PIN inválido o expirado', ok: false });
-  // }
-  if (pin !== '123456') {
+  const user = await Auth.findOne({ where: { email } });
+  if (!user || user.resetPasswordToken !== pin) {
     return res
       .status(400)
       .json({ message: 'PIN inválido o expirado', ok: false });
   }
+
   return res.json({ message: 'PIN verificado con éxito', ok: true });
 };
 
 export const resetPassword = async (req, res) => {
-  const { newPassword } = req.body;
+  const { email, newPassword } = req.body;
+  // console.log('Resetting password for email:', email);
   // Logic to handle password reset
+  if (!email || !newPassword) {
+    return res
+      .status(400)
+      .json({ message: 'Email y nueva contraseña son requeridos', ok: false });
+  }
+  const user = await Auth.findOne({ where: { email } });
+  if (!user) {
+    return res
+      .status(404)
+      .json({ message: 'Usuario no encontrado', ok: false });
+  }
+
+  // Hash new password
+  const salt = crypto.randomBytes(16).toString('hex');
+  const passwordHash = crypto
+    .pbkdf2Sync(newPassword, salt, 100000, 64, 'sha512')
+    .toString('hex');
+
+  user.passwordHash = passwordHash;
+  user.salt = salt;
+  user.resetPasswordToken = null;
+  user.resetPasswordExpires = null;
+  await user.save();
+
   res.json({ message: 'Password has been reset successfully', ok: true });
 };
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
+
   try {
     const user = await Auth.findOne({ where: { email } });
-    if (!user || user.password !== password) {
+    // console.log('User found:', user);
+    if (!user) {
       return res
-        .status(401)
+        .status(400)
         .json({ message: 'Credenciales inválidas', ok: false });
     }
-    return res.json({ message: 'Login successful', ok: true });
+
+    const hashVerify = crypto
+      .pbkdf2Sync(password, user.salt, 100000, 64, 'sha512')
+      .toString('hex');
+
+    if (hashVerify !== user.passwordHash) {
+      // console.log('Password hash mismatch');
+      return res
+        .status(400)
+        .json({ message: 'Credenciales inválidas', ok: false });
+    }
+
+    const token = jwt.sign(
+      { email: user.email }, // payload (usa email como identificador, o mejor el id si tienes)
+      process.env.JWT_SECRET, // clave secreta segura en .env
+      { expiresIn: '1h' } // expira en 1 hora
+    );
+
+    return res.status(200).json({
+      message: 'Login exitoso',
+      ok: true,
+      token,
+    });
   } catch (error) {
-    console.error('Error en login:', error);
+    // console.error('Error en login:', error);
     return res
       .status(500)
       .json({ error: 'Error al procesar la solicitud', ok: false });
