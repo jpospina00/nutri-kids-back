@@ -6,11 +6,12 @@ import DailyIngredient from './DailyIngredient.js';
 import MealPlan from './MealPlan.js';
 import Meal from './Meal.js';
 
-// Auth → Users
-Auth.hasMany(User, { foreignKey: 'authId' });
-User.belongsTo(Auth, { foreignKey: 'authId' });
+// 🔹 Auth ↔ User (relación 1:1 o 1:N, según tu caso)
+// Como la FK es 'email', no 'authId'
+Auth.hasMany(User, { foreignKey: 'email' });
+User.belongsTo(Auth, { foreignKey: 'email' });
 
-// User → Ingredients
+// 🔹 User → Ingredients
 User.hasMany(Ingredient, {
   foreignKey: 'userId',
   onDelete: 'CASCADE',
@@ -18,15 +19,15 @@ User.hasMany(Ingredient, {
 });
 Ingredient.belongsTo(User, { foreignKey: 'userId' });
 
-// User → MealPlans
+// 🔹 User → MealPlans
 User.hasMany(MealPlan, { foreignKey: 'userId', onDelete: 'CASCADE' });
 MealPlan.belongsTo(User, { foreignKey: 'userId' });
 
-// MealPlan → Meals
+// 🔹 MealPlan → Meals
 MealPlan.hasMany(Meal, { foreignKey: 'mealPlanId', onDelete: 'CASCADE' });
 Meal.belongsTo(MealPlan, { foreignKey: 'mealPlanId' });
 
-// User ↔ DailyIngredient ↔ Ingredient
+// 🔹 User ↔ DailyIngredient ↔ Ingredient
 User.hasMany(DailyIngredient, { foreignKey: 'userId', onDelete: 'CASCADE' });
 DailyIngredient.belongsTo(User, { foreignKey: 'userId' });
 
@@ -35,5 +36,8 @@ Ingredient.hasMany(DailyIngredient, {
   onDelete: 'CASCADE',
 });
 DailyIngredient.belongsTo(Ingredient, { foreignKey: 'ingredientId' });
+
+Auth.hasMany(User, { foreignKey: 'createdByAuthEmail', onDelete: 'CASCADE' });
+User.belongsTo(Auth, { foreignKey: 'createdByAuthEmail' });
 
 export { sequelize, Auth, User, Ingredient, DailyIngredient, MealPlan, Meal };

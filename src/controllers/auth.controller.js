@@ -1,7 +1,9 @@
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import Auth from '../models/Auth.js';
+import User from '../models/User.js';
 import transporter from '../utils/emails.js';
+import { sequelize } from '../config/database.js';
 
 export const forgotPassword = async (req, res) => {
   // console.log('Received forgotPassword request with body:', req.body);
@@ -67,6 +69,7 @@ export const forgotPassword = async (req, res) => {
     res.json({ message: 'Correo de restablecimiento enviado', ok: true });
   } catch (error) {
     // console.error('Error en forgotPassword:', error);
+    console.log(error);
     res
       .status(500)
       .json({ error: 'Error al procesar la solicitud', ok: false });
@@ -141,19 +144,74 @@ export const login = async (req, res) => {
         .json({ message: 'Credenciales inválidas', ok: false });
     }
 
+    const userLogger = await User.findOne({ where: { email: user.email } }); // Asegura que el usuario existe en la tabla User
+    console.log('userId:', userLogger.id);
     const token = jwt.sign(
-      { email: user.email }, // payload (usa email como identificador, o mejor el id si tienes)
+      { email: user.email, id: userLogger.id }, // payload (usa email como identificador, o mejor el id si tienes)
       process.env.JWT_SECRET, // clave secreta segura en .env
       { expiresIn: '1h' } // expira en 1 hora
     );
-
     return res.status(200).json({
       message: 'Login exitoso',
       ok: true,
       token,
+      user: userLogger,
     });
   } catch (error) {
     // console.error('Error en login:', error);
+    return res
+      .status(500)
+      .json({ error: 'Error al procesar la solicitud', ok: false });
+  }
+};
+
+export const register = async (req, res) => {
+  const { email, password, name, lastName, age } = req.body;
+  if (!email || !password) {
+    return res
+      .status(400)
+      .json({ message: 'Email y contraseña son requeridos', ok: false });
+  }
+
+  const t = await sequelize.transaction();
+  try {
+    const existingUser = await Auth.findOne({ where: { email } });
+    if (existingUser) {
+      await t.rollback();
+      return res
+        .status(400)
+        .json({ message: 'El correo ya está en uso', ok: false });
+    }
+
+    // Crear Auth
+    const salt = crypto.randomBytes(16).toString('hex');
+    const passwordHash = crypto
+      .pbkdf2Sync(password, salt, 100000, 64, 'sha512')
+      .toString('hex');
+
+    const auth = await Auth.create(
+      { email, passwordHash, salt },
+      { transaction: t }
+    );
+
+    // Crear User vinculado
+    await User.create(
+      {
+        email: auth.email, // FK
+        name,
+        lastName,
+        age,
+      },
+      { transaction: t }
+    );
+
+    await t.commit();
+    return res
+      .status(201)
+      .json({ message: 'Usuario registrado con éxito', ok: true });
+  } catch (error) {
+    await t.rollback();
+    console.error('Error en register:', error);
     return res
       .status(500)
       .json({ error: 'Error al procesar la solicitud', ok: false });
