@@ -5,6 +5,7 @@ import Ingredient from './Ingredient.js';
 import DailyIngredient from './DailyIngredient.js';
 import MealPlan from './MealPlan.js';
 import Meal from './Meal.js';
+import { FoodPlan } from './FoodPlan.js';
 
 // 🔹 Auth ↔ User (relación 1:1 o 1:N, según tu caso)
 // Como la FK es 'email', no 'authId'
@@ -39,5 +40,8 @@ DailyIngredient.belongsTo(Ingredient, { foreignKey: 'ingredientId' });
 
 Auth.hasMany(User, { foreignKey: 'createdByAuthEmail', onDelete: 'CASCADE' });
 User.belongsTo(Auth, { foreignKey: 'createdByAuthEmail' });
+
+User.hasMany(FoodPlan, { foreignKey: 'userId', onDelete: 'CASCADE' });
+FoodPlan.belongsTo(User, { foreignKey: 'userId' });
 
 export { sequelize, Auth, User, Ingredient, DailyIngredient, MealPlan, Meal };

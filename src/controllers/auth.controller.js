@@ -123,7 +123,7 @@ export const resetPassword = async (req, res) => {
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
-
+  console.log('Login attempt for email:', email);
   try {
     const user = await Auth.findOne({ where: { email } });
     // console.log('User found:', user);

@@ -15,7 +15,7 @@ export const verifyToken = (req, res, next) => {
 
     // 🔹 Guardamos la info del token en req.user
     req.user = decoded; // contiene { email, id }
-
+    console.log('Usuario autenticado:', req.user);
     next();
   } catch (error) {
     console.error('Error al verificar token:', error);

@@ -16,7 +16,7 @@ const startServer = async () => {
     console.log('✅ Conexión a la base de datos establecida.');
 
     // Sincronizar tablas
-    await sequelize.sync({ alter: true });
+    await sequelize.sync();
     console.log('✅ Tablas sincronizadas.');
     console.log('📋 Modelos cargados:', Object.keys(sequelize.models));
 
