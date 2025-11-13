@@ -46,7 +46,7 @@ async function getFoodImage(query) {
 export const generateFoods = async (req, res) => {
   try {
     const { idUser } = req.params;
-
+    console.log(`Generando plan de comidas para usuario ${idUser}`);
     // 1️⃣ Buscar usuario
     const user = await User.findByPk(idUser);
     if (!user)
@@ -309,6 +309,74 @@ Cada configuración debe incluir:
     return res.status(500).json({
       ok: false,
       message: 'Error generando recomendaciones',
+      error: error.message,
+    });
+  }
+};
+
+export const getFoodHistory = async (req, res) => {
+  try {
+    const { idUser } = req.params;
+    const { startDate, endDate } = req.query; // opcional: permite filtrar por fechas
+
+    // 1️⃣ Validar usuario
+    const user = await User.findByPk(idUser);
+    if (!user)
+      return res
+        .status(404)
+        .json({ ok: false, message: 'Usuario no encontrado' });
+
+    // 2️⃣ Construir condiciones dinámicas
+    const where = { userId: idUser };
+
+    if (startDate && endDate) {
+      where.date = { [Op.between]: [startDate, endDate] };
+    }
+
+    // 3️⃣ Buscar todos los planes del usuario (ordenados por fecha)
+    const history = await FoodPlan.findAll({
+      where,
+      order: [['date', 'DESC']],
+    });
+
+    if (!history || history.length === 0) {
+      return res.status(404).json({
+        ok: false,
+        message: 'No se encontraron planes de comidas para este usuario',
+      });
+    }
+
+    // 4️⃣ Parsear contenido JSON si es necesario
+    const formattedHistory = history.map((plan) => {
+      let content = plan.content;
+      if (typeof content === 'string') {
+        try {
+          content = JSON.parse(content);
+        } catch (err) {
+          console.warn(
+            `⚠️ No se pudo parsear el contenido del plan ${plan.id}`
+          );
+        }
+      }
+      return {
+        id: plan.id,
+        date: plan.date,
+        plan: content,
+      };
+    });
+
+    // 5️⃣ Devolver respuesta
+    return res.status(200).json({
+      ok: true,
+      message: '✅ Historial de comidas obtenido exitosamente',
+      count: formattedHistory.length,
+      history: formattedHistory,
+    });
+  } catch (error) {
+    console.error('❌ Error obteniendo historial de comidas:', error);
+    return res.status(500).json({
+      ok: false,
+      message: 'Error al obtener el historial de comidas',
       error: error.message,
     });
   }
