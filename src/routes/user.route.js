@@ -4,6 +4,7 @@ import {
   getUserById,
   updateGoalCalories,
   updateIngredientPreference,
+  updateUser,
 } from '../controllers/user.controller.js';
 import { verifyToken } from '../middlewares/authMiddleware.js';
 
@@ -16,5 +17,6 @@ router.patch(
 );
 router.post('/', verifyToken, createUser);
 router.put('/goalCalories/:idUser', verifyToken, updateGoalCalories);
+router.put('/update/:idUser', verifyToken, updateUser);
 
 export default router;

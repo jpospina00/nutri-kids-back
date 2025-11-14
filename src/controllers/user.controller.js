@@ -206,3 +206,89 @@ export const updateGoalCalories = async (req, res) => {
     });
   }
 };
+
+export const updateUser = async (req, res) => {
+  try {
+    const { idUser } = req.params;
+    const {
+      age,
+      weight,
+      height,
+      activityLevel,
+      goal,
+      allergies,
+      likes,
+      dislikes,
+    } = req.body;
+
+    console.log(`🛠 Actualizando usuario ${idUser}`, req.body);
+
+    // 🔎 Buscar usuario
+    const user = await User.findByPk(idUser);
+
+    if (!user) {
+      return res.status(404).json({
+        ok: false,
+        message: 'Usuario no encontrado',
+      });
+    }
+
+    // ----------------------------
+    // 🧼 Normalizar arrays
+    // ----------------------------
+    const cleanArray = (arr) => {
+      if (!arr || !Array.isArray(arr)) return [];
+      return arr.map((x) => x.trim()).filter((x) => x.length > 0);
+    };
+
+    const cleanAllergies = cleanArray(allergies);
+    const cleanLikes = cleanArray(likes);
+    const cleanDislikes = cleanArray(dislikes);
+
+    // ----------------------------
+    // 💾 Actualizar campos
+    // ----------------------------
+    user.age = age;
+    user.weight = weight;
+    user.height = height;
+    user.activityLevel = activityLevel;
+    user.goal = goal;
+    user.allergies = cleanAllergies;
+    user.likes = cleanLikes;
+    user.dislikes = cleanDislikes;
+
+    // 🔥 Forzar marca de cambios para arrays
+    user.changed('allergies', true);
+    user.changed('likes', true);
+    user.changed('dislikes', true);
+
+    await user.save({
+      fields: [
+        'age',
+        'weight',
+        'height',
+        'activityLevel',
+        'goal',
+        'allergies',
+        'likes',
+        'dislikes',
+      ],
+    });
+
+    console.log('✔ Usuario actualizado con éxito:', user.id);
+
+    return res.status(200).json({
+      ok: true,
+      message: 'Usuario actualizado correctamente',
+      userId: user.id,
+      user,
+    });
+  } catch (error) {
+    console.error('❌ Error al actualizar usuario:', error);
+    return res.status(500).json({
+      ok: false,
+      message: 'Error al actualizar usuario',
+      error: error.message,
+    });
+  }
+};
