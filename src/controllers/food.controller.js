@@ -105,7 +105,7 @@ Ingredientes disponibles hoy: ${ingredientList || 'Ninguno'}
 
     // 4️⃣ Llamar a Ollama
     const aiResponse = await axios.post(
-      'http://localhost:11434/api/generate',
+      `${process.env.OLLAMA_URL || 'http://localhost:11434'}/api/generate`,
       { model: 'llama3', prompt, stream: false },
       { headers: { 'Content-Type': 'application/json' } }
     );
@@ -266,7 +266,7 @@ Cada configuración debe incluir:
 
     // 3️⃣ Llamar al modelo de IA local (Ollama)
     const aiResponse = await axios.post(
-      'http://localhost:11434/api/generate',
+      `${process.env.OLLAMA_URL || 'http://localhost:11434'}/api/generate`,
       { model: 'llama3', prompt, stream: false },
       { headers: { 'Content-Type': 'application/json' } }
     );

@@ -13,4 +13,5 @@ export const config = {
   },
   jwtSecret: process.env.JWT_SECRET || 'changeme',
   pixabayApiKey: process.env.PIXABAY_API_KEY || 'your_pixabay_api_key',
+  ollamaUrl: process.env.OLLAMA_URL || 'http://localhost:11434',
 };

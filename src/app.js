@@ -7,7 +7,6 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(errorHandler);
 
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
@@ -15,5 +14,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api', routes);
+
+app.use(errorHandler);
 
 export default app;
