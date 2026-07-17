@@ -16,12 +16,12 @@ const startServer = async () => {
     console.log('✅ Conexión a la base de datos establecida.');
 
     // Sincronizar tablas
-    await sequelize.sync({ alter: true });
+    await sequelize.sync();
     console.log('✅ Tablas sincronizadas.');
     console.log('📋 Modelos cargados:', Object.keys(sequelize.models));
 
-    app.listen(PORT, () => {
-      console.log(`🚀 Server is running on http://localhost:${PORT}`);
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Server is running on http://0.0.0.0:${PORT}`);
     });
   } catch (error) {
     console.error('❌ Error iniciando el servidor:', error);

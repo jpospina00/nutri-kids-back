@@ -11,7 +11,33 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  lastName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    references: { model: 'Auths', key: 'email' },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  },
   age: DataTypes.INTEGER,
+  height: {
+    type: DataTypes.FLOAT,
+    comment: 'Altura en metros o centímetros',
+  },
+  weight: {
+    type: DataTypes.FLOAT,
+    comment: 'Peso en kilogramos',
+  },
+  activityLevel: {
+    type: DataTypes.ENUM('baja', 'media', 'alta', 'muy alta'),
+    allowNull: false,
+    defaultValue: 'media',
+  },
+
+  // 🔹 Preferencias y restricciones
   allergies: {
     type: DataTypes.ARRAY(DataTypes.STRING),
     defaultValue: [],
@@ -24,10 +50,26 @@ const User = sequelize.define('User', {
     type: DataTypes.ARRAY(DataTypes.STRING),
     defaultValue: [],
   },
-  activityLevel: {
-    type: DataTypes.ENUM('baja', 'media', 'alta', 'muy alta'),
+
+  // 🔹 🔥 NUEVA SECCIÓN: Plan nutricional base
+  calorieGoal: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: 'Calorías recomendadas por día',
+  },
+  goal: {
+    type: DataTypes.ENUM('mantener', 'bajar', 'subir'),
+    defaultValue: 'mantener',
     allowNull: false,
-    defaultValue: 'media',
+    comment: 'Objetivo físico del usuario',
+  },
+
+  createdByAuthEmail: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    references: { model: 'Auths', key: 'email' },
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
   },
 });
 

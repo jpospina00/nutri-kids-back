@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -11,5 +11,6 @@ export const config = {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT || 5432,
   },
-  jwtSecret: process.env.JWT_SECRET || "changeme",
+  jwtSecret: process.env.JWT_SECRET || 'changeme',
+  pixabayApiKey: process.env.PIXABAY_API_KEY || 'your_pixabay_api_key',
 };
